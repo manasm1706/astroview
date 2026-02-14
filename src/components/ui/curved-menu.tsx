@@ -62,6 +62,11 @@ const defaultNavItems: iNavItem[] = [
     href: "/live-tracker",
     subheading: "Real-time ISS tracking",
   },
+  {
+    heading: "Polaris",
+    href: "/constellation-game",
+    subheading: "Constellation quiz challenge",
+  },
 ];
 
 const CustomFooter: React.FC = () => {

@@ -2,17 +2,18 @@ import './SpaceImpact.css'
 import { useUserLocation } from '../hooks/useUserLocation'
 import { useWeather } from '../hooks/useWeather'
 import { useSpaceWeather } from '../hooks/useSpaceWeather'
-import { useEarthImagery } from '../hooks/useEarthImagery'
+import { useSatellites } from '../hooks/useSatellites'
 import { useImpactAnalysis } from '../hooks/useImpactAnalysis'
 import { useLearnMore } from '../hooks/useLearnMore'
 import LearnMoreModal from '../components/LearnMoreModal'
+import SatelliteGlobe from '../components/SatelliteGlobe'
 import type { ImpactChain } from '../services/impactEngine'
 
 export default function SpaceImpact() {
   const location = useUserLocation()
   const weather = useWeather(location.lat, location.lng, location.loading)
   const space = useSpaceWeather()
-  const earthImg = useEarthImagery()
+  const satData = useSatellites()
   const impact = useImpactAnalysis(
     weather.current,
     weather.forecast,
@@ -151,37 +152,20 @@ export default function SpaceImpact() {
         <div className="impact-loading">Loading real-time data from weather & space APIs...</div>
       )}
 
-      {/* ── Earth Satellite Imagery (EPIC) ── */}
+      {/* ── Earth Satellite Imagery — 3D Globe ── */}
       <section className="impact-section">
         <h2>🛰️ Earth Satellite Imagery</h2>
         <p className="section-subtitle">
-          Satellite imagery is used to monitor cloud systems, weather patterns, and predict rainfall.
+          Real-time satellite tracking powered by NORAD two-line element data.
+          Click any satellite for details.
         </p>
-        <div className="epic-card">
-          {earthImg.loading ? (
-            <div className="epic-loading">Loading satellite imagery from NASA DSCOVR...</div>
-          ) : earthImg.image ? (
-            <>
-              <img src={earthImg.image.imageUrl} alt={earthImg.image.caption} className="epic-img" />
-              <div className="epic-info">
-                <h3>🌎 {earthImg.image.caption}</h3>
-                <p className="epic-date">Captured: {earthImg.image.date}</p>
-                <p className="epic-explain">
-                  This image was captured by NASA's DSCOVR satellite, positioned at the L1 Lagrange point
-                  ~1.5 million km from Earth. It provides critical data for weather forecasting,
-                  atmospheric monitoring, and disaster preparedness.
-                </p>
-                <button className="learn-more-btn" onClick={() => learnMore.search('Earth observation satellite')}>
-                  Learn More
-                </button>
-              </div>
-            </>
-          ) : (
-            <div className="epic-loading">
-              {earthImg.error ? 'Failed to load EPIC imagery' : 'No satellite imagery available'}
-            </div>
-          )}
-        </div>
+        <SatelliteGlobe
+          satellites={satData.satellites}
+          loading={satData.loading}
+          error={satData.error}
+          selectedSatellite={satData.selectedSatellite}
+          onSelectSatellite={satData.selectSatellite}
+        />
       </section>
 
       {/* ── Space → Earth Impact Chain ── */}

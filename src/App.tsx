@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard'
 import SkyEvents from './pages/SkyEvents'
 import SpaceImpact from './pages/SpaceImpact'
 import LiveTracker from './pages/LiveTracker'
+import ConstellationGame from './pages/ConstellationGame'
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
         <Route path="/sky-events" element={<SkyEvents />} />
         <Route path="/space-impact" element={<SpaceImpact />} />
         <Route path="/live-tracker" element={<LiveTracker />} />
+        <Route path="/constellation-game" element={<ConstellationGame />} />
       </Route>
     </Routes>
   )

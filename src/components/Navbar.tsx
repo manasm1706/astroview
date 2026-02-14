@@ -14,6 +14,7 @@ export default function Navbar() {
         <NavLink to="/sky-events">Sky Events</NavLink>
         <NavLink to="/space-impact">Space Impact</NavLink>
         <NavLink to="/live-tracker">Live Tracker</NavLink>
+        <NavLink to="/constellation-game">Polaris</NavLink>
       </div>
     </nav>
   )
