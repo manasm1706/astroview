@@ -1,0 +1,132 @@
+/* ═══════════════════════════════════════════
+   AstroView — Live Tracker Styles
+   ═══════════════════════════════════════════ */
+
+.live-tracker {
+    position: relative;
+    width: 100%;
+    height: calc(100vh - 60px);
+    overflow: hidden;
+}
+
+.tracker-map {
+    width: 100%;
+    height: 100%;
+    background: #070B1A;
+}
+
+/* ── ISS Marker ── */
+.iss-marker {
+    background: none !important;
+    border: none !important;
+}
+
+.iss-dot {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    animation: iss-pulse 2s ease-in-out infinite;
+    filter: drop-shadow(0 0 12px rgba(0, 245, 255, 0.6));
+}
+
+@keyframes iss-pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.15);
+    }
+}
+
+/* ── Info Panel ── */
+.tracker-panel {
+    position: absolute;
+    top: 1.5rem;
+    left: 1.5rem;
+    width: 280px;
+    padding: 1.5rem;
+    border-radius: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(5, 8, 16, 0.88);
+    backdrop-filter: blur(20px);
+    z-index: 1000;
+}
+
+.tracker-panel h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.tracker-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 0.85rem;
+}
+
+.tracker-row span {
+    color: #A0A7C0;
+}
+
+.tracker-row strong {
+    color: #fff;
+    font-variant-numeric: tabular-nums;
+}
+
+.tracker-row:last-of-type {
+    border-bottom: none;
+}
+
+.tracker-refresh-note {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 1rem;
+    font-size: 0.75rem;
+    color: rgba(160, 167, 192, 0.5);
+}
+
+.tracker-live-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #00FF88;
+    box-shadow: 0 0 8px rgba(0, 255, 136, 0.6);
+    animation: live-blink 1.5s ease-in-out infinite;
+}
+
+@keyframes live-blink {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.3;
+    }
+}
+
+/* Override leaflet dark tiles */
+.leaflet-container {
+    background: #070B1A !important;
+}
+
+@media (max-width: 600px) {
+    .tracker-panel {
+        top: auto;
+        bottom: 1rem;
+        left: 1rem;
+        right: 1rem;
+        width: auto;
+    }
+}
