@@ -1,5 +1,10 @@
 import { useState } from 'react'
 import './SkyEvents.css'
+import { useUserLocation } from '../hooks/useUserLocation'
+import { useWeather } from '../hooks/useWeather'
+import { useAstronomy } from '../hooks/useAstronomy'
+import { useViewingWindow } from '../hooks/useViewingWindow'
+import ViewingWindowCard from '../components/ViewingWindow'
 
 type Tab = 'today' | 'week' | 'month'
 
@@ -12,33 +17,8 @@ interface SkyEvent {
   description: string
 }
 
-const EVENTS: Record<Tab, SkyEvent[]> = {
-  today: [
-    {
-      name: 'ISS Pass',
-      date: 'Tonight',
-      time: '7:42 PM',
-      direction: 'NW → SE',
-      visibility: 'Excellent',
-      description: 'Bright pass reaching magnitude -3.4. Look northwest and track southeast.',
-    },
-    {
-      name: 'Jupiter Visible',
-      date: 'Tonight',
-      time: '8:15 PM',
-      direction: 'East',
-      visibility: 'Good',
-      description: 'Jupiter rises in the east, visible as the brightest point in the sky.',
-    },
-    {
-      name: 'Moon Rise',
-      date: 'Tonight',
-      time: '9:02 PM',
-      direction: 'East',
-      visibility: 'Excellent',
-      description: 'Waxing crescent moon rises with 34% illumination.',
-    },
-  ],
+// Static events for "this week" and "this month" — these are curated
+const STATIC_EVENTS: Record<'week' | 'month', SkyEvent[]> = {
   week: [
     {
       name: 'Venus at Greatest Elongation',
@@ -47,14 +27,6 @@ const EVENTS: Record<Tab, SkyEvent[]> = {
       direction: 'West',
       visibility: 'Excellent',
       description: 'Venus at its farthest from the Sun — best viewing opportunity this month.',
-    },
-    {
-      name: 'ISS Double Pass',
-      date: 'Feb 17',
-      time: '6:55 PM & 8:31 PM',
-      direction: 'SW → NE',
-      visibility: 'Good',
-      description: 'Two ISS passes in one evening — rare opportunity!',
     },
     {
       name: 'Constellation: Orion Peak',
@@ -111,6 +83,78 @@ const VIS_COLOR: Record<string, string> = {
 export default function SkyEvents() {
   const [tab, setTab] = useState<Tab>('today')
 
+  const location = useUserLocation()
+  const weather = useWeather(location.lat, location.lng, location.loading)
+  const astro = useAstronomy(location.lat, location.lng, location.loading)
+  const viewingWindow = useViewingWindow(
+    weather.hourly,
+    weather.astronomy,
+    weather.astronomy?.moon_illumination ?? 0,
+    weather.loading
+  )
+
+  // ── Build "Tonight" events dynamically ──
+  const visiblePlanets = astro.planets.filter((p) => p.isVisible)
+  const cloudCover = weather.current?.cloud ?? 0
+  const viewingQuality = cloudCover <= 20 ? 'Excellent' : cloudCover <= 40 ? 'Good' : cloudCover <= 70 ? 'Moderate' : 'Poor'
+  const qualityPercent = Math.max(0, 100 - cloudCover)
+
+  const todayEvents: SkyEvent[] = []
+
+  // Moon event
+  if (weather.astronomy) {
+    todayEvents.push({
+      name: 'Moon Rise',
+      date: 'Tonight',
+      time: weather.astronomy.moonrise || 'N/A',
+      direction: 'East',
+      visibility: (weather.astronomy.moon_illumination ?? 0) < 50 ? 'Excellent' : 'Good',
+      description: `${weather.astronomy.moon_phase} moon rises with ${weather.astronomy.moon_illumination}% illumination.`,
+    })
+  }
+
+  // Visible planets as events
+  visiblePlanets.forEach((planet) => {
+    todayEvents.push({
+      name: `${planet.name} Visible`,
+      date: 'Tonight',
+      time: planet.rise || 'Dusk',
+      direction: planet.altitude > 45 ? 'High' : planet.altitude > 15 ? 'Mid-Sky' : 'Low',
+      visibility: viewingQuality as SkyEvent['visibility'],
+      description: `${planet.name} is visible tonight. Rises at ${planet.rise}, sets at ${planet.set}.`,
+    })
+  })
+
+  // If no events yet, add a placeholder
+  if (todayEvents.length === 0 && !weather.loading && !astro.loading) {
+    todayEvents.push({
+      name: 'Stargazing Conditions',
+      date: 'Tonight',
+      time: weather.astronomy?.sunset || 'Evening',
+      direction: 'All Sky',
+      visibility: viewingQuality as SkyEvent['visibility'],
+      description: `Cloud cover at ${cloudCover}%. ${viewingQuality} conditions for stargazing.`,
+    })
+  }
+
+  const currentEvents: SkyEvent[] =
+    tab === 'today' ? todayEvents : STATIC_EVENTS[tab]
+
+  // Moon & Sun data from weather API
+  const moonPhase = weather.astronomy?.moon_phase || '—'
+  const moonIllumination = weather.astronomy?.moon_illumination ?? 0
+  const moonrise = weather.astronomy?.moonrise || '—'
+  const moonset = weather.astronomy?.moonset || '—'
+  const sunrise = weather.astronomy?.sunrise || '—'
+  const sunset = weather.astronomy?.sunset || '—'
+
+  // Planet rise times
+  const jupiter = astro.planets.find((p) => p.name.toLowerCase() === 'jupiter')
+  const saturn = astro.planets.find((p) => p.name.toLowerCase() === 'saturn')
+
+  const moonBrightness =
+    moonIllumination < 30 ? 'Low' : moonIllumination < 70 ? 'Moderate' : 'High'
+
   return (
     <div className="sky-events">
       <div className="sky-header">
@@ -133,28 +177,37 @@ export default function SkyEvents() {
 
       {/* ── Event Cards ── */}
       <div className="sky-event-list">
-        {EVENTS[tab].map((ev, i) => (
-          <div key={i} className="sky-event-card">
+        {weather.loading || astro.loading ? (
+          <div className="sky-event-card">
             <div className="sky-event-top">
-              <h3>{ev.name}</h3>
-              <span
-                className="sky-vis-badge"
-                style={{
-                  color: VIS_COLOR[ev.visibility],
-                  borderColor: VIS_COLOR[ev.visibility] + '40',
-                }}
-              >
-                {ev.visibility}
-              </span>
+              <h3>Loading sky events...</h3>
             </div>
-            <div className="sky-event-meta">
-              <span>📅 {ev.date}</span>
-              <span>⏰ {ev.time}</span>
-              <span>🧭 {ev.direction}</span>
-            </div>
-            <p className="sky-event-desc">{ev.description}</p>
+            <p className="sky-event-desc">Fetching data from APIs...</p>
           </div>
-        ))}
+        ) : (
+          currentEvents.map((ev, i) => (
+            <div key={i} className="sky-event-card">
+              <div className="sky-event-top">
+                <h3>{ev.name}</h3>
+                <span
+                  className="sky-vis-badge"
+                  style={{
+                    color: VIS_COLOR[ev.visibility],
+                    borderColor: VIS_COLOR[ev.visibility] + '40',
+                  }}
+                >
+                  {ev.visibility}
+                </span>
+              </div>
+              <div className="sky-event-meta">
+                <span>📅 {ev.date}</span>
+                <span>⏰ {ev.time}</span>
+                <span>🧭 {ev.direction}</span>
+              </div>
+              <p className="sky-event-desc">{ev.description}</p>
+            </div>
+          ))
+        )}
       </div>
 
       {/* ── Moon & Planet Panel ── */}
@@ -163,19 +216,19 @@ export default function SkyEvents() {
           <h3>🌙 Moon Info</h3>
           <div className="sky-panel-row">
             <span>Phase</span>
-            <strong>Waxing Crescent</strong>
+            <strong>{weather.loading ? '...' : moonPhase}</strong>
           </div>
           <div className="sky-panel-row">
             <span>Illumination</span>
-            <strong>34%</strong>
+            <strong>{weather.loading ? '...' : `${moonIllumination}%`}</strong>
           </div>
           <div className="sky-panel-row">
             <span>Moonrise</span>
-            <strong>9:02 PM</strong>
+            <strong>{weather.loading ? '...' : moonrise}</strong>
           </div>
           <div className="sky-panel-row">
             <span>Moonset</span>
-            <strong>8:14 AM</strong>
+            <strong>{weather.loading ? '...' : moonset}</strong>
           </div>
         </div>
 
@@ -183,19 +236,19 @@ export default function SkyEvents() {
           <h3>☀️ Sun & Planets</h3>
           <div className="sky-panel-row">
             <span>Sunrise</span>
-            <strong>6:48 AM</strong>
+            <strong>{weather.loading ? '...' : sunrise}</strong>
           </div>
           <div className="sky-panel-row">
             <span>Sunset</span>
-            <strong>6:22 PM</strong>
+            <strong>{weather.loading ? '...' : sunset}</strong>
           </div>
           <div className="sky-panel-row">
             <span>Jupiter Rise</span>
-            <strong>8:15 PM</strong>
+            <strong>{astro.loading ? '...' : jupiter?.rise || 'N/A'}</strong>
           </div>
           <div className="sky-panel-row">
             <span>Saturn Rise</span>
-            <strong>5:30 AM</strong>
+            <strong>{astro.loading ? '...' : saturn?.rise || 'N/A'}</strong>
           </div>
         </div>
 
@@ -209,19 +262,24 @@ export default function SkyEvents() {
               <span>Excellent</span>
             </div>
             <div className="quality-bar">
-              <div className="quality-fill" style={{ width: '82%' }} />
-              <div className="quality-marker" style={{ left: '82%' }} />
+              <div className="quality-fill" style={{ width: `${qualityPercent}%` }} />
+              <div className="quality-marker" style={{ left: `${qualityPercent}%` }} />
             </div>
           </div>
           <div className="sky-panel-row" style={{ marginTop: '1rem' }}>
             <span>Cloud Cover</span>
-            <strong>15%</strong>
+            <strong>{weather.loading ? '...' : `${cloudCover}%`}</strong>
           </div>
           <div className="sky-panel-row">
             <span>Moon Brightness</span>
-            <strong>Low</strong>
+            <strong>{weather.loading ? '...' : moonBrightness}</strong>
           </div>
         </div>
+      </div>
+
+      {/* ── Best Viewing Window ── */}
+      <div className="sky-viewing-window">
+        <ViewingWindowCard window={viewingWindow.window} loading={viewingWindow.loading} />
       </div>
     </div>
   )

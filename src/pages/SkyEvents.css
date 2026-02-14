@@ -194,6 +194,11 @@
     box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
 }
 
+/* ── Viewing Window ── */
+.sky-viewing-window {
+    margin-top: 2rem;
+}
+
 /* ── Responsive ── */
 @media (max-width: 768px) {
     .sky-panels {
