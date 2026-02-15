@@ -105,11 +105,13 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    height: 100vh;
-    padding: 4rem 1rem 0.5rem;
-    overflow: hidden;
-    gap: 0.25rem;
+    /* Removed justify-content: center to avoid huge bottom gaps on tall screens */
+    min-height: 100vh;
+    padding: 4rem 1rem 2rem;
+    /* Reduced padding as requested */
+    overflow-y: auto;
+    /* Allow scrolling if needed */
+    gap: 0.5rem;
 }
 
 /* ── Header ── */
@@ -174,7 +176,8 @@
     backdrop-filter: blur(12px);
     border: 1px solid rgba(0, 229, 255, 0.15);
     border-radius: 1rem;
-    margin-bottom: 0.5rem;
+    margin-bottom: 2rem;
+    /* Increased from 0.5rem */
     flex-shrink: 0;
 }
 

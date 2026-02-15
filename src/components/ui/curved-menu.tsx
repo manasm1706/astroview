@@ -41,42 +41,42 @@ const MENU_SLIDE_ANIMATION = {
 
 const defaultNavItems: iNavItem[] = [
   {
-    heading: "Home",
+    heading: " Home",
     href: "/",
     subheading: "Back to landing",
   },
   {
-    heading: "Dashboard",
+    heading: " Dashboard",
     href: "/dashboard",
     subheading: "Your space intelligence hub",
   },
   {
-    heading: "Sky Events",
+    heading: " Sky Events",
     href: "/sky-events",
     subheading: "Tonight's celestial events",
   },
   {
-    heading: "Space Impact",
+    heading: " Space Impact",
     href: "/space-impact",
     subheading: "How space affects Earth",
   },
   {
-    heading: "Live Tracker",
+    heading: " Live Tracker",
     href: "/live-tracker",
     subheading: "Real-time ISS tracking",
   },
   {
-    heading: "Polaris",
+    heading: " Polaris",
     href: "/constellation-game",
     subheading: "Constellation quiz challenge",
   },
   {
-    heading: "Timeline",
+    heading: " Timeline",
     href: "/timeline",
     subheading: "Journey through space history",
   },
   {
-    heading: "Your Profile",
+    heading: " Profile",
     href: "/profile",
     subheading: "Account & preferences",
   },
@@ -298,15 +298,18 @@ const CurvedNavbar: React.FC<
 
             {navItems.map((item, index) => {
               const total = navItems.length;
-              const angleRange = 105;
-              const startAngle = -angleRange / 2;
-              const step = angleRange / (total - 1);
-              const angleDeg = startAngle + step * index;
-              const angleRad = (angleDeg * Math.PI) / 180;
+              // Linear vertical spacing for even gaps
+              const startTop = 9;
+              const endTop = 81;
+              const topPercent = startTop + (index * (endTop - startTop)) / (total - 1);
 
-              const verticalCenter = 50;
-              const topPercent = verticalCenter + Math.sin(angleRad) * 40;
-              const leftPercent = 20 + (1 - Math.cos(angleRad)) * 20;
+              // Back-calculate angle from top position to maintain curve path
+              // verticalCenter = 45, radiusY = 40
+              // topPercent = 45 + sin(angle) * 40  =>  sin(angle) = (top - 45) / 40
+              const verticalCenter = 45;
+              const angleRad = Math.asin((topPercent - verticalCenter) / 40);
+              
+              const leftPercent = 11 + (1 - Math.cos(angleRad)) * 45;
 
               return (
                 <motion.div

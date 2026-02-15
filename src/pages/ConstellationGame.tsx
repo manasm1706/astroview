@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Sparkles, Trophy, RotateCcw, ChevronRight, Star, Zap,
-    Clock, Award, ArrowRight, Keyboard,
+    Clock, Award, ArrowRight, Keyboard, Heart,
 } from "lucide-react";
 import { CardStack, type CardItem } from "../components/ui/card-stack";
 import { Starfield } from "../components/Starfield";
@@ -32,6 +32,8 @@ export default function ConstellationGame() {
     const [answered, setAnswered] = useState<null | "correct" | "wrong">(null);
     const [options, setOptions] = useState<string[]>([]);
     const [showScorePop, setShowScorePop] = useState(false);
+    const [hearts, setHearts] = useState(3);
+    const [gameOver, setGameOver] = useState(false);
 
     /* ── Timer state ── */
     const [timeLeft, setTimeLeft] = useState(0);
@@ -46,16 +48,19 @@ export default function ConstellationGame() {
     const [showBadge, setShowBadge] = useState(false);
 
     /* ── Derived state ── */
-    const levelConfig = getLevelConfig(level);
-    const pool = getPoolForLevel(level);
+
+    const levelConfig = useMemo(() => getLevelConfig(level), [level]);
+    const pool = useMemo(() => getPoolForLevel(level), [level]);
     const quizCards = useRef<CardItem[]>(shuffle(getNewForLevel(level)));
     const [quizIndex, setQuizIndex] = useState(0);
     const activeCard = quizMode ? quizCards.current[quizIndex % quizCards.current.length] : exploreCards[activeIndex];
+    const lastCardId = useRef<number | null>(null);
 
     /* ── Reshuffle quiz cards when level changes ── */
     useEffect(() => {
         quizCards.current = shuffle(getNewForLevel(level));
         setQuizIndex(0);
+        lastCardId.current = null;
     }, [level]);
 
     /* ── Generate quiz options (wrong answers from full pool) ── */
@@ -71,12 +76,16 @@ export default function ConstellationGame() {
     /* ── Prepare quiz round ── */
     useEffect(() => {
         if (quizMode && activeCard && !showLevelUp && !showBadge) {
-            if (levelConfig.difficulty !== "hard") {
-                setOptions(generateOptions(activeCard.title));
+            // Only regenerate options if the card has changed
+            if (lastCardId.current !== activeCard.id) {
+                if (levelConfig.difficulty !== "hard") {
+                    setOptions(generateOptions(activeCard.title));
+                }
+                setAnswered(null);
+                setTypedAnswer("");
+                setTimeLeft(levelConfig.timerSeconds);
+                lastCardId.current = activeCard.id;
             }
-            setAnswered(null);
-            setTypedAnswer("");
-            setTimeLeft(levelConfig.timerSeconds);
         }
     }, [quizMode, quizIndex, activeCard, generateOptions, levelConfig, showLevelUp, showBadge]);
 
@@ -114,9 +123,22 @@ export default function ConstellationGame() {
 
     /* ── Handle timeout ── */
     const handleTimeout = () => {
-        setAnswered("wrong");
         setStreakInLevel(0);
-        setTimeout(() => advanceQuiz(), 1200);
+        setTotalScore(s => Math.max(0, s - 2)); // Timeout penalty
+        setAnswered("wrong"); // Reveal correct answer
+        setHearts(prev => {
+            const newHearts = prev - 1;
+            if (newHearts <= 0) {
+                setTimeout(() => setGameOver(true), 1000);
+            }
+            // Only advance if not game over
+            setTimeout(() => {
+                if (newHearts > 0) {
+                    advanceQuiz();
+                }
+            }, 1200);
+            return newHearts;
+        });
     };
 
     /* ── Handle guess (multiple choice) ── */
@@ -146,10 +168,22 @@ export default function ConstellationGame() {
             }
         } else {
             setStreakInLevel(0);
+            setTotalScore(s => Math.max(0, s - 2)); // Decrease score by 2
             setAnswered("wrong");
+            setHearts(prev => {
+                const newHearts = prev - 1;
+                if (newHearts <= 0) {
+                    setTimeout(() => setGameOver(true), 1000);
+                }
+                return newHearts;
+            });
         }
 
-        setTimeout(() => advanceQuiz(), 1200);
+        setTimeout(() => {
+            if (hearts > 1 || correct) { // Only advance if not game over (or if correct)
+                 advanceQuiz();
+            }
+        }, 1200);
     };
 
     /* ── Handle hard mode submit ── */
@@ -165,10 +199,12 @@ export default function ConstellationGame() {
     };
 
     /* ── Level up ── */
+    /* ── Level up ── */
     const handleLevelUp = () => {
         setShowLevelUp(false);
         setLevel(l => l + 1);
         setStreakInLevel(0);
+        setHearts(3); // Refill hearts
     };
 
     /* ── Restart ── */
@@ -177,9 +213,11 @@ export default function ConstellationGame() {
         setLevel(1);
         setStreakInLevel(0);
         setTotalScore(0);
+        setHearts(3);
         setAnswered(null);
         setShowBadge(false);
         setShowLevelUp(false);
+        setGameOver(false);
         setTypedAnswer("");
     };
 
@@ -277,13 +315,16 @@ export default function ConstellationGame() {
                                 </span>
                             </div>
                             <div className="polaris-score-divider" />
-                            <div className="polaris-score-item">
-                                <Zap className="w-4 h-4" style={{ color: '#fbbf24' }} />
-                                <span className="polaris-score-label">Streak</span>
-                                <span className="polaris-score-value">
-                                    {streakInLevel}/{CORRECT_TO_PASS}
-                                </span>
-                            </div>
+                        <div className="polaris-score-item">
+                            <Zap className="w-4 h-4 text-star-gold" />
+                            <span className="polaris-score-label">Streak</span>
+                            <span className="polaris-score-value">{streakInLevel}/{CORRECT_TO_PASS}</span>
+                        </div>
+                        <div className="polaris-score-divider" />
+                        <div className="polaris-score-item">
+                            <Heart className={cn("w-4 h-4", hearts > 0 ? "text-red-500 fill-red-500" : "text-gray-600")} />
+                            <span className="polaris-score-value text-white">{hearts}</span>
+                        </div>
                         </motion.div>
                     )}
                 </AnimatePresence>
@@ -451,7 +492,7 @@ export default function ConstellationGame() {
                         </>
                     )}
                 </div>
-            </section>
+
 
             {/* ── Level Up Overlay ── */}
             <AnimatePresence>
@@ -525,6 +566,48 @@ export default function ConstellationGame() {
                     </motion.div>
                 )}
             </AnimatePresence>
+            {/* ── Game Over Overlay ── */}
+            <AnimatePresence>
+                {gameOver && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="polaris-overlay"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            className="polaris-badge-card"
+                            style={{ borderColor: 'rgba(248, 113, 113, 0.3)' }}
+                        >
+                            <Heart className="w-16 h-16 text-red-500 fill-red-500 animate-pulse" />
+                            <h2 className="polaris-badge-title" style={{ background: 'linear-gradient(to right, #f87171, #fca5a5)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                                Out of Stardust
+                            </h2>
+                            <p className="polaris-badge-sub">
+                                You ran out of energy! The cosmos is a dangerous place.
+                            </p>
+                            <div className="polaris-badge-stats">
+                                <div className="polaris-badge-stat" style={{ borderColor: 'rgba(248, 113, 113, 0.3)', color: '#f87171', background: 'rgba(248, 113, 113, 0.05)' }}>
+                                    <Trophy className="w-4 h-4" />
+                                    Level {level}
+                                </div>
+                                <div className="polaris-badge-stat" style={{ borderColor: 'rgba(248, 113, 113, 0.3)', color: '#f87171', background: 'rgba(248, 113, 113, 0.05)' }}>
+                                    <Star className="w-4 h-4" />
+                                    {totalScore} pts
+                                </div>
+                            </div>
+                            <button onClick={handleRestart} className="polaris-action-btn" style={{ marginTop: '1rem', borderColor: 'rgba(248, 113, 113, 0.5)', color: '#fca5a5' }}>
+                                <RotateCcw className="w-4 h-4" />
+                                Try Again
+                            </button>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+        </section>
         </div>
     );
 }
