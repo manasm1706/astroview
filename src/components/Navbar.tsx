@@ -15,6 +15,7 @@ export default function Navbar() {
         <NavLink to="/space-impact">Space Impact</NavLink>
         <NavLink to="/live-tracker">Live Tracker</NavLink>
         <NavLink to="/constellation-game">Polaris</NavLink>
+        <NavLink to="/timeline">Timeline</NavLink>
       </div>
     </nav>
   )

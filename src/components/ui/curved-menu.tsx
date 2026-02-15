@@ -3,7 +3,8 @@ import React, { useState, useRef, useEffect } from "react";
 
 import { motion, useMotionValue, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Linkedin, Github, Dribbble, Figma } from "lucide-react";
+import { Linkedin, Github, Dribbble, Figma, LogOut } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
 
 interface iNavItem {
   heading: string;
@@ -68,6 +69,11 @@ const defaultNavItems: iNavItem[] = [
     heading: "Polaris",
     href: "/constellation-game",
     subheading: "Constellation quiz challenge",
+  },
+  {
+    heading: "Timeline",
+    href: "/timeline",
+    subheading: "Journey through space history",
   },
   {
     heading: "Your Profile",
@@ -292,7 +298,7 @@ const CurvedNavbar: React.FC<
 
             {navItems.map((item, index) => {
               const total = navItems.length;
-              const angleRange = 100;
+              const angleRange = 105;
               const startAngle = -angleRange / 2;
               const step = angleRange / (total - 1);
               const angleDeg = startAngle + step * index;
@@ -323,7 +329,7 @@ const CurvedNavbar: React.FC<
                     style={{
                       border: '1px solid rgba(255,255,255,0.15)',
                       borderRadius: '14px',
-                      padding: '4px 20px',
+                      padding: '3px 16px',
                       background: 'rgba(255,255,255,0.03)',
                       backdropFilter: 'blur(4px)',
                       transition: 'all 0.3s ease',

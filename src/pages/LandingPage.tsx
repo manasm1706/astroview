@@ -170,27 +170,29 @@ export default function LandingPage() {
           top: '1.5rem',
           left: '1.5rem',
           zIndex: 100,
-          padding: '0.6rem 1.4rem',
-          background: 'linear-gradient(135deg, #7c3aed, #4f46e5)',
-          color: '#fff',
-          borderRadius: '10px',
+          padding: '0.6rem 1.6rem',
+          background: 'rgba(15, 18, 30, 0.85)',
+          backdropFilter: 'blur(12px)',
+          color: '#e2e8f0',
+          borderRadius: '999px',
           fontWeight: 600,
           fontSize: '0.9rem',
           textDecoration: 'none',
-          letterSpacing: '0.02em',
-          boxShadow: '0 4px 20px rgba(124, 58, 237, 0.3)',
+          letterSpacing: '0.04em',
+          textTransform: 'uppercase',
+          border: '1.5px solid rgba(255, 255, 255, 0.15)',
           transition: 'all 0.3s ease',
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.transform = 'translateY(-2px)'
-          e.currentTarget.style.boxShadow = '0 6px 30px rgba(124, 58, 237, 0.45)'
+          e.currentTarget.style.background = 'rgba(25, 30, 50, 0.95)';
+          e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.transform = 'translateY(0)'
-          e.currentTarget.style.boxShadow = '0 4px 20px rgba(124, 58, 237, 0.3)'
+          e.currentTarget.style.background = 'rgba(15, 18, 30, 0.85)';
+          e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
         }}
       >
-        Get Started →
+        Get Started
       </Link>
 
       {/* Curved hamburger menu */}
