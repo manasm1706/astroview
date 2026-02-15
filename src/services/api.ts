@@ -12,8 +12,8 @@ export const BASE_URLS = {
     WEATHER: 'https://api.weatherapi.com/v1',
     ISS: 'http://api.open-notify.org',
     NASA: 'https://api.nasa.gov',
-    NOAA: 'https://services.swpc.noaa.gov',
-    ASTRONOMY: 'https://api.astronomyapi.com/api/v2',
+    NOAA: '/proxy-noaa',
+    ASTRONOMY: '/proxy-astronomy/api/v2',
 } as const
 
 /** Generic JSON fetcher with timeout */

@@ -2,8 +2,9 @@
 import React, { useState, useRef, useEffect } from "react";
 
 import { motion, useMotionValue, AnimatePresence } from "framer-motion";
-import { Link } from "react-router-dom";
-import { Linkedin, Github, Dribbble, Figma } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { User, LogOut } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
 
 interface iNavItem {
   heading: string;
@@ -67,26 +68,63 @@ const defaultNavItems: iNavItem[] = [
     href: "/constellation-game",
     subheading: "Constellation quiz challenge",
   },
+  {
+    heading: "Your Profile",
+    href: "/profile",
+    subheading: "Account & preferences",
+  },
 ];
 
 const CustomFooter: React.FC = () => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
+
   return (
-    <div className="flex w-full text-sm justify-between px-10 md:px-24 py-5" style={{ color: '#A0A7C0' }}>
-      <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer">
-        <Linkedin size={24} />
-      </a>
-      <a href="https://github.com" target="_blank" rel="noopener noreferrer">
-        <Github size={24} />
-      </a>
-      <a href="https://dribbble.com" target="_blank" rel="noopener noreferrer">
-        <Dribbble size={24} />
-      </a>
-      <a href="https://www.figma.com" target="_blank" rel="noopener noreferrer">
-        <Figma size={24} />
-      </a>
-      <a href="https://www.figma.com" target="_blank" rel="noopener noreferrer">
-        <Figma size={24} />
-      </a>
+    <div className="flex w-full flex-col gap-3 px-10 md:px-24 py-5" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+      {user && (
+        <div className="flex items-center gap-3 mb-1">
+          <div
+            className="flex items-center justify-center rounded-full"
+            style={{
+              width: 36, height: 36,
+              background: 'linear-gradient(135deg, #00F5FF, #7B61FF)',
+              fontSize: '0.95rem', fontWeight: 700, color: '#0a0e1a',
+            }}
+          >
+            {user.name?.charAt(0)?.toUpperCase() || '?'}
+          </div>
+          <div>
+            <p style={{ color: '#fff', fontSize: '0.9rem', fontWeight: 600, margin: 0 }}>{user.name}</p>
+            <p style={{ color: '#A0A7C0', fontSize: '0.75rem', margin: 0 }}>{user.email}</p>
+          </div>
+        </div>
+      )}
+      <button
+        onClick={handleLogout}
+        className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl cursor-pointer"
+        style={{
+          background: 'rgba(255, 68, 102, 0.12)',
+          border: '1px solid rgba(255, 68, 102, 0.25)',
+          color: '#ff4466',
+          fontSize: '0.88rem',
+          fontWeight: 600,
+          transition: 'all 0.2s',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = 'rgba(255, 68, 102, 0.22)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = 'rgba(255, 68, 102, 0.12)';
+        }}
+      >
+        <LogOut size={16} />
+        Logout
+      </button>
     </div>
   );
 };

@@ -8,20 +8,33 @@ import SkyEvents from './pages/SkyEvents'
 import SpaceImpact from './pages/SpaceImpact'
 import LiveTracker from './pages/LiveTracker'
 import ConstellationGame from './pages/ConstellationGame'
+import Profile from './pages/Profile'
+import Login from './pages/Login'
+import Signup from './pages/Signup'
+import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
   return (
     <Routes>
-      {/* Landing page — standalone, no navbar/footer layout */}
+      {/* Public routes — no authentication required */}
       <Route path="/" element={<LandingPage />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
 
-      {/* Inner pages — shared Navbar + Footer via Layout */}
-      <Route element={<Layout />}>
+      {/* Protected routes — require valid JWT */}
+      <Route
+        element={
+          <ProtectedRoute>
+            <Layout />
+          </ProtectedRoute>
+        }
+      >
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/sky-events" element={<SkyEvents />} />
         <Route path="/space-impact" element={<SpaceImpact />} />
         <Route path="/live-tracker" element={<LiveTracker />} />
         <Route path="/constellation-game" element={<ConstellationGame />} />
+        <Route path="/profile" element={<Profile />} />
       </Route>
     </Routes>
   )

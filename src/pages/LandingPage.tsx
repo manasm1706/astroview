@@ -162,6 +162,37 @@ export default function LandingPage() {
 
   return (
     <div className="landing">
+      {/* Get Started button — top-left, links to login */}
+      <Link
+        to="/login"
+        style={{
+          position: 'fixed',
+          top: '1.5rem',
+          left: '1.5rem',
+          zIndex: 100,
+          padding: '0.6rem 1.4rem',
+          background: 'linear-gradient(135deg, #7c3aed, #4f46e5)',
+          color: '#fff',
+          borderRadius: '10px',
+          fontWeight: 600,
+          fontSize: '0.9rem',
+          textDecoration: 'none',
+          letterSpacing: '0.02em',
+          boxShadow: '0 4px 20px rgba(124, 58, 237, 0.3)',
+          transition: 'all 0.3s ease',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-2px)'
+          e.currentTarget.style.boxShadow = '0 6px 30px rgba(124, 58, 237, 0.45)'
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0)'
+          e.currentTarget.style.boxShadow = '0 4px 20px rgba(124, 58, 237, 0.3)'
+        }}
+      >
+        Get Started →
+      </Link>
+
       {/* Curved hamburger menu */}
       <Header />
 
@@ -241,7 +272,7 @@ export default function LandingPage() {
             </p>
             <p className="about-paragraph">
               We aggregate live data from NASA, the International Space Station,
-              weather services, and astronomical databases to give you a 
+              weather services, and astronomical databases to give you a
               personalized view of the universe — all localized to your exact
               location on Earth.
             </p>
