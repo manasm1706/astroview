@@ -39,7 +39,7 @@ export async function getAstronauts(): Promise<{
 export async function getISSRegion(lat: number, lng: number): Promise<string> {
     try {
         const data = await fetchJson<any>(
-            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=3`,
+            `/proxy-nominatim/reverse?lat=${lat}&lon=${lng}&format=json&zoom=3`,
             { headers: { 'User-Agent': 'AstroView/1.0' } }
         )
         return data.display_name || determineOceanRegion(lat, lng)
