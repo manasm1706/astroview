@@ -105,15 +105,17 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     height: 100vh;
-    padding: 1.5rem 1rem 1rem;
+    padding: 4rem 1rem 0.5rem;
     overflow: hidden;
+    gap: 0.25rem;
 }
 
 /* ── Header ── */
 .polaris-header {
     text-align: center;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.25rem;
     flex-shrink: 0;
 }
 
@@ -122,7 +124,7 @@
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.25rem;
 }
 
 .polaris-badge span {
@@ -140,9 +142,9 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    margin-bottom: 0.3rem;
+    margin-bottom: 0.15rem;
     letter-spacing: -0.02em;
-    line-height: 1.2;
+    line-height: 1.1;
 }
 
 .polaris-subtitle {
@@ -155,13 +157,11 @@
 
 /* ── Cards Area ── */
 .polaris-cards-area {
-    flex: 1;
     width: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 0;
-    max-height: 340px;
+    min-height: 340px;
 }
 
 /* ── Score Panel ── */
@@ -353,23 +353,252 @@
     text-shadow: 0 0 10px rgba(0, 229, 255, 0.5), 0 0 30px rgba(0, 229, 255, 0.2);
 }
 
-/* ── Score pop ── */
-@keyframes score-pop {
-    0% {
+/* ── Difficulty Badge ── */
+.polaris-difficulty-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border: 1px solid;
+}
+
+/* ── Timer Bar ── */
+.polaris-timer-bar-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    max-width: 360px;
+    margin: 0.25rem auto;
+    flex-shrink: 0;
+}
+
+.polaris-timer-track {
+    flex: 1;
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+}
+
+.polaris-timer-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: background 0.3s;
+}
+
+.polaris-timer-text {
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    min-width: 2rem;
+    text-align: right;
+}
+
+/* ── Fullscreen Overlay ── */
+.polaris-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(2, 6, 23, 0.85);
+    backdrop-filter: blur(12px);
+}
+
+/* ── Level Up Card ── */
+.polaris-level-up-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 2.5rem 3rem;
+    border-radius: 1.5rem;
+    background: linear-gradient(135deg, rgba(17, 24, 54, 0.95), rgba(10, 15, 44, 0.98));
+    border: 1px solid rgba(0, 229, 255, 0.2);
+    text-align: center;
+    max-width: 400px;
+}
+
+.polaris-level-up-stars {
+    font-size: 2rem;
+    color: #fbbf24;
+    animation: level-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes level-pulse {
+
+    0%,
+    100% {
         transform: scale(1);
+        opacity: 0.8;
     }
 
     50% {
-        transform: scale(1.3);
-    }
-
-    100% {
-        transform: scale(1);
+        transform: scale(1.1);
+        opacity: 1;
     }
 }
 
-.score-pop {
-    animation: score-pop 0.3s ease-out;
+.polaris-level-up-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    background: linear-gradient(to right, #67e8f9, #60a5fa, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.polaris-level-up-sub {
+    color: #9ca3af;
+    font-size: 0.9rem;
+}
+
+.polaris-level-up-info {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 1rem;
+    border-radius: 0.75rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #7b8fd4;
+    font-size: 0.8rem;
+}
+
+.polaris-level-btn {
+    margin-top: 0.5rem;
+    color: #67e8f9 !important;
+    border-color: rgba(0, 229, 255, 0.3) !important;
+}
+
+/* ── Badge / Completion Card ── */
+.polaris-badge-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.2rem;
+    padding: 3rem;
+    border-radius: 1.5rem;
+    background: linear-gradient(135deg, rgba(17, 24, 54, 0.95), rgba(30, 20, 10, 0.95));
+    border: 2px solid rgba(251, 191, 36, 0.3);
+    text-align: center;
+    max-width: 440px;
+    box-shadow:
+        0 0 40px rgba(251, 191, 36, 0.15),
+        0 0 80px rgba(251, 191, 36, 0.08);
+}
+
+.polaris-badge-trophy {
+    animation: trophy-float 3s ease-in-out infinite;
+}
+
+@keyframes trophy-float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.polaris-badge-title {
+    font-size: 1.8rem;
+    font-weight: 800;
+    background: linear-gradient(to right, #fbbf24, #f59e0b, #fbbf24);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.polaris-badge-sub {
+    color: #9ca3af;
+    font-size: 0.9rem;
+    max-width: 320px;
+}
+
+.polaris-badge-stats {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.polaris-badge-stat {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.75rem;
+    background: rgba(251, 191, 36, 0.08);
+    border: 1px solid rgba(251, 191, 36, 0.2);
+    color: #fbbf24;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+/* ── Hard Mode Input ── */
+.polaris-hard-form {
+    display: flex;
+    gap: 0.5rem;
+    width: 100%;
+    max-width: 420px;
+    margin: 0 auto;
+}
+
+.polaris-hard-input {
+    flex: 1;
+    padding: 0.7rem 1rem;
+    border-radius: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(10, 15, 44, 0.8);
+    backdrop-filter: blur(8px);
+    color: #e2e8f0;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.polaris-hard-input:focus {
+    border-color: rgba(0, 229, 255, 0.4);
+    box-shadow: 0 0 12px rgba(0, 229, 255, 0.1);
+}
+
+.polaris-hard-input::placeholder {
+    color: #4a5eae;
+}
+
+.polaris-submit-btn {
+    flex-shrink: 0;
+}
+
+.polaris-hard-result {
+    text-align: center;
+    font-size: 1.1rem;
+    font-weight: 600;
+    padding: 0.8rem 1.5rem;
+    border-radius: 0.75rem;
+    max-width: 420px;
+    margin: 0 auto;
+}
+
+.polaris-hard-correct {
+    color: #4ade80;
+    background: rgba(74, 222, 128, 0.08);
+    border: 1px solid rgba(74, 222, 128, 0.3);
+}
+
+.polaris-hard-wrong {
+    color: #f87171;
+    background: rgba(248, 113, 113, 0.08);
+    border: 1px solid rgba(248, 113, 113, 0.3);
 }
 
 /* ── Responsive ── */
@@ -394,5 +623,15 @@
     .polaris-skip-btn {
         bottom: 1.5rem;
         right: 1.5rem;
+    }
+
+    .polaris-level-up-card,
+    .polaris-badge-card {
+        margin: 0 1rem;
+        padding: 2rem 1.5rem;
+    }
+
+    .polaris-hard-form {
+        flex-direction: column;
     }
 }

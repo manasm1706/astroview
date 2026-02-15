@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from "react";
 
 import { motion, useMotionValue, AnimatePresence } from "framer-motion";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Linkedin, Github, Dribbble, Figma } from "lucide-react";
 
 interface iNavItem {
@@ -15,6 +15,7 @@ interface iNavItem {
 interface iNavLinkProps extends iNavItem {
   setIsActive: (isActive: boolean) => void;
   index: number;
+  onNavigate: (href: string) => void;
 }
 
 interface iCurvedNavbarProps {
@@ -32,6 +33,7 @@ const MENU_SLIDE_ANIMATION = {
   enter: { x: "0", transition: { duration: 0.8, ease: [0.76, 0, 0.24, 1] as const } },
   exit: {
     x: "calc(100% + 100px)",
+    opacity: 0,
     transition: { duration: 0.8, ease: [0.76, 0, 0.24, 1] as const },
   },
 };
@@ -69,24 +71,21 @@ const defaultNavItems: iNavItem[] = [
   },
 ];
 
+const socialLinks = [
+  { icon: Linkedin, href: "https://linkedin.com", label: "LinkedIn" },
+  { icon: Github, href: "https://github.com", label: "GitHub" },
+  { icon: Dribbble, href: "https://dribbble.com", label: "Dribbble" },
+  { icon: Figma, href: "https://www.figma.com", label: "Figma" },
+];
+
 const CustomFooter: React.FC = () => {
   return (
     <div className="flex w-full text-sm justify-between px-10 md:px-24 py-5" style={{ color: '#A0A7C0' }}>
-      <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer">
-        <Linkedin size={24} />
-      </a>
-      <a href="https://github.com" target="_blank" rel="noopener noreferrer">
-        <Github size={24} />
-      </a>
-      <a href="https://dribbble.com" target="_blank" rel="noopener noreferrer">
-        <Dribbble size={24} />
-      </a>
-      <a href="https://www.figma.com" target="_blank" rel="noopener noreferrer">
-        <Figma size={24} />
-      </a>
-      <a href="https://www.figma.com" target="_blank" rel="noopener noreferrer">
-        <Figma size={24} />
-      </a>
+      {socialLinks.map((s) => (
+        <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer">
+          <s.icon size={24} />
+        </a>
+      ))}
     </div>
   );
 };
@@ -96,13 +95,14 @@ const NavLink: React.FC<iNavLinkProps> = ({
   href,
   setIsActive,
   index,
+  onNavigate,
 }) => {
-  const ref = useRef<HTMLAnchorElement | null>(null);
+  const ref = useRef<HTMLDivElement | null>(null);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
 
   const handleMouseMove = (
-    e: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
+    e: React.MouseEvent<HTMLDivElement, MouseEvent>,
   ) => {
     const rect = ref.current!.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
@@ -112,7 +112,8 @@ const NavLink: React.FC<iNavLinkProps> = ({
   };
 
   const handleClick = () => {
-    return setIsActive(false);
+    setIsActive(false);
+    onNavigate(href);
   };
 
   return (
@@ -120,47 +121,48 @@ const NavLink: React.FC<iNavLinkProps> = ({
       onClick={handleClick}
       initial="initial"
       whileHover="whileHover"
-      className="group relative flex items-center justify-between border-b py-4 transition-colors duration-500 md:py-8 uppercase"
-      style={{ borderColor: 'rgba(255,255,255,0.1)' }}
+      className="group relative flex items-center uppercase cursor-pointer"
+      style={{ padding: '0.6rem 0' }}
     >
-      <Link ref={ref} onMouseMove={handleMouseMove} to={href}>
-        <div className="relative flex items-start">
-          <span className="transition-colors duration-500 text-4xl font-thin mr-2" style={{ color: '#00F5FF' }}>
+      <div ref={ref} onMouseMove={handleMouseMove} style={{ textDecoration: 'none', cursor: 'pointer' }}>
+        <div className="relative flex items-center">
+          <span
+            className="transition-colors duration-500 text-2xl md:text-3xl font-thin mr-2"
+            style={{ color: '#ffffff', textShadow: '0 0 10px rgba(255,255,255,0.5), 0 0 20px rgba(255,255,255,0.2)' }}
+          >
             {index}.
           </span>
-          <div className="flex flex-row gap-2">
-            <motion.span
-              variants={{
-                initial: { x: 0 },
-                whileHover: { x: -16 },
-              }}
-              transition={{
-                type: "spring",
-                staggerChildren: 0.075,
-                delayChildren: 0.25,
-              }}
-              className="relative z-10 block text-4xl font-extralight transition-colors duration-500 md:text-4xl"
-              style={{ color: '#ffffff' }}
-            >
-              {heading.split("").map((letter, i) => {
-                return (
-                  <motion.span
-                    key={i}
-                    variants={{
-                      initial: { x: 0 },
-                      whileHover: { x: 16 },
-                    }}
-                    transition={{ type: "spring" }}
-                    className="inline-block"
-                  >
-                    {letter}
-                  </motion.span>
-                );
-              })}
-            </motion.span>
-          </div>
+          <motion.span
+            variants={{
+              initial: { x: 0 },
+              whileHover: { x: -8 },
+            }}
+            transition={{
+              type: "spring",
+              staggerChildren: 0.075,
+              delayChildren: 0.25,
+            }}
+            className="relative z-10 block text-2xl md:text-3xl font-extralight transition-colors duration-500"
+            style={{ color: '#ffffff', textShadow: '0 0 10px rgba(255,255,255,0.5), 0 0 20px rgba(255,255,255,0.2)' }}
+          >
+            {heading.split("").map((letter, i) => {
+              return (
+                <motion.span
+                  key={i}
+                  variants={{
+                    initial: { x: 0 },
+                    whileHover: { x: 8 },
+                  }}
+                  transition={{ type: "spring" }}
+                  className="inline-block"
+                >
+                  {letter}
+                </motion.span>
+              );
+            })}
+          </motion.span>
         </div>
-      </Link>
+      </div>
     </motion.div>
   );
 };
@@ -194,8 +196,8 @@ const Curve: React.FC = () => {
 
   return (
     <svg
-      className="absolute top-0 -left-[99px] w-[100px] stroke-none h-full"
-      style={{ fill: '#0a0e1a' }}
+      className="absolute top-0 -left-[99px] w-[100px] h-full"
+      style={{ fill: '#0a0e1a', overflow: 'visible' }}
     >
       <motion.path
         variants={curve}
@@ -208,8 +210,8 @@ const Curve: React.FC = () => {
 };
 
 const CurvedNavbar: React.FC<
-  iCurvedNavbarProps & { footer?: React.ReactNode }
-> = ({ setIsActive, navItems, footer }) => {
+  iCurvedNavbarProps & { footer?: React.ReactNode; onNavigate: (href: string) => void }
+> = ({ setIsActive, navItems, footer, onNavigate }) => {
   return (
     <>
       {/* Blur backdrop */}
@@ -229,29 +231,103 @@ const CurvedNavbar: React.FC<
         animate="enter"
         exit="exit"
         className="h-[100dvh] w-screen max-w-screen-sm fixed right-0 top-0 z-40"
-        style={{ background: '#0a0e1a', borderRadius: '40px 0 0 40px' }}
+        style={{
+          background: '#0a0e1a',
+          borderRadius: '50% 0 0 50%',
+          overflow: 'hidden',
+          borderLeft: '1.5px solid rgba(255,255,255,0.2)',
+        }}
       >
-        <div className="h-full pt-14 flex flex-col justify-between">
-          <div className="flex flex-col text-5xl gap-3 mt-0 px-10 md:px-24">
-            <div className="uppercase text-sm mb-0" style={{ color: '#A0A7C0', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-              <p>Navigation</p>
-            </div>
-            <section className="bg-transparent mt-0">
-              <div className="mx-auto max-w-7xl">
-                {navItems.map((item, index) => {
-                  return (
+        {/* Navigation items arranged in a circular arc */}
+        <div className="relative h-full w-full flex flex-col items-end justify-center">
+          {/* Arc-positioned nav items */}
+          <div className="relative w-full h-full">
+
+            {navItems.map((item, index) => {
+              const total = navItems.length;
+              const angleRange = 100;
+              const startAngle = -angleRange / 2;
+              const step = angleRange / (total - 1);
+              const angleDeg = startAngle + step * index;
+              const angleRad = (angleDeg * Math.PI) / 180;
+
+              const verticalCenter = 50;
+              const topPercent = verticalCenter + Math.sin(angleRad) * 40;
+              const leftPercent = 20 + (1 - Math.cos(angleRad)) * 20;
+
+              return (
+                <motion.div
+                  key={item.href}
+                  initial={{ opacity: 0, x: 60 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 60 }}
+                  transition={{ delay: 0.3 + index * 0.08, duration: 0.5, ease: 'easeOut' }}
+                  style={{
+                    position: 'absolute',
+                    top: `${topPercent}%`,
+                    left: `${leftPercent}%`,
+                    transform: 'translateY(-50%)',
+                    whiteSpace: 'nowrap',
+                    zIndex: 1,
+                  }}
+                >
+                  {/* Individual button container */}
+                  <div
+                    style={{
+                      border: '1px solid rgba(255,255,255,0.15)',
+                      borderRadius: '14px',
+                      padding: '4px 20px',
+                      background: 'rgba(255,255,255,0.03)',
+                      backdropFilter: 'blur(4px)',
+                      transition: 'all 0.3s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
+                      e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+                      e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)';
+                    }}
+                  >
                     <NavLink
-                      key={item.href}
                       {...item}
                       setIsActive={setIsActive}
                       index={index + 1}
+                      onNavigate={onNavigate}
                     />
-                  );
-                })}
-              </div>
-            </section>
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
-          {footer}
+
+          {/* Social links at bottom of the arc */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ delay: 0.6, duration: 0.4 }}
+            className="absolute bottom-8 right-0 w-full flex justify-center gap-6"
+            style={{ paddingLeft: '30%' }}
+          >
+            {socialLinks.map((s) => (
+              <a
+                key={s.label}
+                href={s.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="transition-all duration-300 hover:scale-110"
+                style={{
+                  color: 'rgba(255,255,255,0.5)',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = '#ffffff')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(255,255,255,0.5)')}
+              >
+                <s.icon size={20} />
+              </a>
+            ))}
+          </motion.div>
         </div>
         <Curve />
       </motion.div>
@@ -264,9 +340,17 @@ const Header: React.FC<iHeaderProps> = ({
   footer = <CustomFooter />,
 }) => {
   const [isActive, setIsActive] = useState(false);
+  const navigate = useNavigate();
 
   const handleClick = () => {
     setIsActive(!isActive);
+  };
+
+  const handleNavigate = (href: string) => {
+    // Delay navigation to let the exit animation play
+    setTimeout(() => {
+      navigate(href);
+    }, 600);
   };
 
   return (
@@ -277,19 +361,38 @@ const Header: React.FC<iHeaderProps> = ({
           className="fixed right-4 top-4 md:right-6 md:top-6 z-50 w-14 h-14 rounded-full flex items-center justify-center cursor-pointer"
           style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(12px)' }}
         >
-          <div className="relative w-8 h-6 flex flex-col justify-between items-center">
+          {/* ── Thick bars, very tight gap ── */}
+          <div
+            className="relative flex flex-col items-center"
+            style={{ gap: '2px' }}
+          >
             <span
-              className={`block h-1 w-7 transition-transform duration-300 ${isActive ? "rotate-45 translate-y-2" : ""}`}
-              style={{ background: '#ffffff' }}
-            ></span>
+              className={`block w-8 transition-transform duration-300 ${isActive ? "rotate-45 translate-y-[6px]" : ""}`}
+              style={{
+                height: '4px',
+                borderRadius: '2px',
+                background: '#ffffff',
+                boxShadow: '0 0 8px rgba(255,255,255,0.8)',
+              }}
+            />
             <span
-              className={`block h-1 w-7 transition-opacity duration-300 ${isActive ? "opacity-0" : ""}`}
-              style={{ background: '#ffffff' }}
-            ></span>
+              className={`block w-8 transition-all duration-300 ${isActive ? "opacity-0 scale-x-0" : ""}`}
+              style={{
+                height: '4px',
+                borderRadius: '2px',
+                background: '#ffffff',
+                boxShadow: '0 0 8px rgba(255,255,255,0.8)',
+              }}
+            />
             <span
-              className={`block h-1 w-7 transition-transform duration-300 ${isActive ? "-rotate-45 -translate-y-3" : ""}`}
-              style={{ background: '#ffffff' }}
-            ></span>
+              className={`block w-8 transition-transform duration-300 ${isActive ? "-rotate-45 -translate-y-[6px]" : ""}`}
+              style={{
+                height: '4px',
+                borderRadius: '2px',
+                background: '#ffffff',
+                boxShadow: '0 0 8px rgba(255,255,255,0.8)',
+              }}
+            />
           </div>
         </div>
       </div>
@@ -300,6 +403,7 @@ const Header: React.FC<iHeaderProps> = ({
             setIsActive={setIsActive}
             navItems={navItems}
             footer={footer}
+            onNavigate={handleNavigate}
           />
         )}
       </AnimatePresence>

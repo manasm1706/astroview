@@ -27,8 +27,8 @@
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    background: var(--accent-cyan, #00F5FF);
-    box-shadow: 0 0 16px rgba(0, 245, 255, 0.5);
+    background: #ffffff;
+    box-shadow: 0 0 16px rgba(255, 255, 255, 0.5);
     animation: pulse-glow 2s ease-in-out infinite;
 }
 
@@ -49,7 +49,8 @@
 
 .app-nav-links a:hover,
 .app-nav-links a.active {
-    color: #00F5FF;
+    color: #ffffff;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
 }
 
 .app-nav-links a.active::after {
@@ -59,7 +60,7 @@
     left: 0;
     right: 0;
     height: 2px;
-    background: linear-gradient(90deg, #00F5FF, #7B61FF);
+    background: linear-gradient(90deg, #ffffff, #cccccc);
     border-radius: 2px;
 }
 

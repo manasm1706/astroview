@@ -1,169 +1,200 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Trophy, RotateCcw, ChevronRight, Star, Zap } from "lucide-react";
+import {
+    Sparkles, Trophy, RotateCcw, ChevronRight, Star, Zap,
+    Clock, Award, ArrowRight, Keyboard,
+} from "lucide-react";
 import { CardStack, type CardItem } from "../components/ui/card-stack";
 import { Starfield } from "../components/Starfield";
 import { cn } from "../lib/utils";
 import introVideo from "../assets/game intro.webm";
+import cardBackImg from "../assets/image.png";
+import {
+    ALL_CONSTELLATIONS, CORRECT_TO_PASS, TOTAL_LEVELS,
+    getLevelConfig, getPoolForLevel, getNewForLevel, shuffle,
+} from "../data/constellationData";
 import './ConstellationGame.css';
-
-/* ─────────────────────────── constellation data ─────── */
-const CONSTELLATIONS: CardItem[] = [
-    {
-        id: 1,
-        title: "Orion",
-        description:
-            "Known as The Hunter, Orion is one of the most recognizable constellations visible from any point on Earth. Its belt of three stars guides the eyes across the winter sky.",
-        image:
-            "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=600&q=80",
-    },
-    {
-        id: 2,
-        title: "Andromeda",
-        description:
-            "Named after the mythical princess, Andromeda is home to the nearest large galaxy — the Andromeda Galaxy (M31), 2.5 million light-years away.",
-        image:
-            "https://images.unsplash.com/photo-1543722530-d2c3201371e7?w=600&q=80",
-    },
-    {
-        id: 3,
-        title: "Cassiopeia",
-        description:
-            "Recognizable by its distinctive W-shape, Cassiopeia circles the North Pole as a circumpolar constellation named after the vain queen of Ethiopia.",
-        image:
-            "https://images.unsplash.com/photo-1520034475321-cbe63696469a?w=600&q=80",
-    },
-    {
-        id: 4,
-        title: "Scorpius",
-        description:
-            "This zodiac constellation features the bright red supergiant Antares and is best visible in summer from the southern hemisphere. Its scorpion shape is unmistakable.",
-        image:
-            "https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?w=600&q=80",
-    },
-    {
-        id: 5,
-        title: "Ursa Major",
-        description:
-            "The Great Bear contains the Big Dipper asterism. It has been used for navigation for thousands of years and always points toward Polaris, the North Star.",
-        image:
-            "https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=600&q=80",
-    },
-    {
-        id: 6,
-        title: "Leo",
-        description:
-            "Named after the Nemean Lion from Greek mythology, Leo is a zodiac constellation whose brightest star Regulus shines at magnitude 1.4 in the spring sky.",
-        image:
-            "https://images.unsplash.com/photo-1506318137071-a8e063b4bec0?w=600&q=80",
-    },
-    {
-        id: 7,
-        title: "Cygnus",
-        description:
-            "The Swan soars through the Milky Way, its brightest star Deneb forming one corner of the Summer Triangle asterism with Vega and Altair.",
-        image:
-            "https://images.unsplash.com/photo-1465101162946-4377e57745c3?w=600&q=80",
-    },
-    {
-        id: 8,
-        title: "Lyra",
-        description:
-            "This small constellation contains Vega — the fifth brightest star in the night sky and a cornerstone of the Summer Triangle.",
-        image:
-            "https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3?w=600&q=80",
-    },
-    {
-        id: 9,
-        title: "Aquarius",
-        description:
-            "The Water Bearer is one of the oldest recognized constellations. It hosts several fascinating deep-sky objects, including the Helix Nebula.",
-        image:
-            "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&q=80",
-    },
-    {
-        id: 10,
-        title: "Pegasus",
-        description:
-            "The Great Square of Pegasus dominates the autumn sky. This winged horse from mythology contains several exoplanet-hosting stars.",
-        image:
-            "https://images.unsplash.com/photo-1507400492013-162706c8c05e?w=600&q=80",
-    },
-];
-
-/* ─────────────────────── shuffle utility ─────────────── */
-function shuffle<T>(arr: T[]): T[] {
-    const a = [...arr];
-    for (let i = a.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
-}
 
 /* ────────────────────────────── component ────────────── */
 export default function ConstellationGame() {
     const [showIntro, setShowIntro] = useState(true);
     const videoRef = useRef<HTMLVideoElement>(null);
 
-    const [cards] = useState<CardItem[]>(() => shuffle(CONSTELLATIONS));
+    /* ── Explore state ── */
+    const [exploreCards] = useState<CardItem[]>(() => shuffle(ALL_CONSTELLATIONS).slice(0, 10));
     const [activeIndex, setActiveIndex] = useState(0);
 
-    // Quiz state
+    /* ── Quiz / Level state ── */
     const [quizMode, setQuizMode] = useState(false);
-    const [score, setScore] = useState(0);
-    const [answered, setAnswered] = useState<number | null>(null);
+    const [level, setLevel] = useState(1);
+    const [streakInLevel, setStreakInLevel] = useState(0);
+    const [totalScore, setTotalScore] = useState(0);
+    const [answered, setAnswered] = useState<null | "correct" | "wrong">(null);
     const [options, setOptions] = useState<string[]>([]);
-    const [streak, setStreak] = useState(0);
     const [showScorePop, setShowScorePop] = useState(false);
 
-    const activeCard = cards[activeIndex];
+    /* ── Timer state ── */
+    const [timeLeft, setTimeLeft] = useState(0);
+    const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-    // Generate quiz options
+    /* ── Hard mode typing ── */
+    const [typedAnswer, setTypedAnswer] = useState("");
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    /* ── Overlays ── */
+    const [showLevelUp, setShowLevelUp] = useState(false);
+    const [showBadge, setShowBadge] = useState(false);
+
+    /* ── Derived state ── */
+    const levelConfig = getLevelConfig(level);
+    const pool = getPoolForLevel(level);
+    const quizCards = useRef<CardItem[]>(shuffle(getNewForLevel(level)));
+    const [quizIndex, setQuizIndex] = useState(0);
+    const activeCard = quizMode ? quizCards.current[quizIndex % quizCards.current.length] : exploreCards[activeIndex];
+
+    /* ── Reshuffle quiz cards when level changes ── */
+    useEffect(() => {
+        quizCards.current = shuffle(getNewForLevel(level));
+        setQuizIndex(0);
+    }, [level]);
+
+    /* ── Generate quiz options (wrong answers from full pool) ── */
     const generateOptions = useCallback(
         (correctTitle: string) => {
-            const wrong = shuffle(
-                cards.filter((c) => c.title !== correctTitle).map((c) => c.title)
-            ).slice(0, 3);
+            const poolTitles = pool.map(c => c.title).filter(t => t !== correctTitle);
+            const wrong = shuffle(poolTitles).slice(0, 3);
             return shuffle([correctTitle, ...wrong]);
         },
-        [cards]
+        [pool]
     );
 
-    // Prepare quiz when entering quiz mode or when active card changes
+    /* ── Prepare quiz round ── */
     useEffect(() => {
-        if (quizMode && activeCard) {
-            setOptions(generateOptions(activeCard.title));
+        if (quizMode && activeCard && !showLevelUp && !showBadge) {
+            if (levelConfig.difficulty !== "hard") {
+                setOptions(generateOptions(activeCard.title));
+            }
             setAnswered(null);
+            setTypedAnswer("");
+            setTimeLeft(levelConfig.timerSeconds);
         }
-    }, [quizMode, activeIndex, activeCard, generateOptions]);
+    }, [quizMode, quizIndex, activeCard, generateOptions, levelConfig, showLevelUp, showBadge]);
 
+    /* ── Timer countdown ── */
+    useEffect(() => {
+        if (!quizMode || answered || showLevelUp || showBadge) {
+            if (timerRef.current) clearInterval(timerRef.current);
+            return;
+        }
+
+        timerRef.current = setInterval(() => {
+            setTimeLeft(prev => {
+                if (prev <= 1) {
+                    // Time's up — counts as wrong
+                    clearInterval(timerRef.current!);
+                    handleTimeout();
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+
+        return () => {
+            if (timerRef.current) clearInterval(timerRef.current);
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [quizMode, quizIndex, answered, showLevelUp, showBadge]);
+
+    /* ── Focus input in hard mode ── */
+    useEffect(() => {
+        if (quizMode && levelConfig.difficulty === "hard" && inputRef.current && !answered) {
+            inputRef.current.focus();
+        }
+    }, [quizMode, quizIndex, levelConfig.difficulty, answered]);
+
+    /* ── Handle timeout ── */
+    const handleTimeout = () => {
+        setAnswered("wrong");
+        setStreakInLevel(0);
+        setTimeout(() => advanceQuiz(), 1200);
+    };
+
+    /* ── Handle guess (multiple choice) ── */
     const handleGuess = (option: string) => {
-        if (answered !== null) return;
-        const correct = option === activeCard.title;
+        if (answered) return;
+        if (timerRef.current) clearInterval(timerRef.current);
+
+        const correct = option.toLowerCase().trim() === activeCard.title.toLowerCase().trim();
         if (correct) {
-            setScore((s) => s + 1);
-            setStreak((s) => s + 1);
+            setTotalScore(s => s + 1);
             setShowScorePop(true);
             setTimeout(() => setShowScorePop(false), 400);
+            const newStreak = streakInLevel + 1;
+            setStreakInLevel(newStreak);
+            setAnswered("correct");
+
+            if (newStreak >= CORRECT_TO_PASS) {
+                // Level complete!
+                setTimeout(() => {
+                    if (level >= TOTAL_LEVELS) {
+                        setShowBadge(true);
+                    } else {
+                        setShowLevelUp(true);
+                    }
+                }, 800);
+                return;
+            }
         } else {
-            setStreak(0);
+            setStreakInLevel(0);
+            setAnswered("wrong");
         }
-        setAnswered(correct ? 1 : 0);
-        // Auto-advance after showing result
-        setTimeout(() => {
-            setActiveIndex((i) => (i + 1) % cards.length);
-        }, 1200);
+
+        setTimeout(() => advanceQuiz(), 1200);
     };
 
-    const handleVideoEnd = () => {
-        setShowIntro(false);
+    /* ── Handle hard mode submit ── */
+    const handleHardSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!typedAnswer.trim()) return;
+        handleGuess(typedAnswer);
     };
 
+    /* ── Advance to next quiz card ── */
+    const advanceQuiz = () => {
+        setQuizIndex(i => (i + 1) % quizCards.current.length);
+    };
+
+    /* ── Level up ── */
+    const handleLevelUp = () => {
+        setShowLevelUp(false);
+        setLevel(l => l + 1);
+        setStreakInLevel(0);
+    };
+
+    /* ── Restart ── */
+    const handleRestart = () => {
+        setQuizMode(false);
+        setLevel(1);
+        setStreakInLevel(0);
+        setTotalScore(0);
+        setAnswered(null);
+        setShowBadge(false);
+        setShowLevelUp(false);
+        setTypedAnswer("");
+    };
+
+    /* ── Start quiz ── */
+    const startQuiz = () => {
+        quizCards.current = shuffle(getNewForLevel(level));
+        setQuizIndex(0);
+        setStreakInLevel(0);
+        setTotalScore(0);
+        setQuizMode(true);
+    };
+
+    const handleVideoEnd = () => setShowIntro(false);
     const skipIntro = () => {
-        if (videoRef.current) {
-            videoRef.current.pause();
-        }
+        if (videoRef.current) videoRef.current.pause();
         setShowIntro(false);
     };
 
@@ -187,6 +218,10 @@ export default function ConstellationGame() {
         );
     }
 
+    /* ── Timer bar fraction ── */
+    const timerFraction = quizMode ? timeLeft / levelConfig.timerSeconds : 1;
+    const timerColor = timerFraction > 0.5 ? "#4ade80" : timerFraction > 0.25 ? "#fbbf24" : "#f87171";
+
     /* ── Game Screen ── */
     return (
         <div className="constellation-game-page">
@@ -202,21 +237,20 @@ export default function ConstellationGame() {
                 >
                     <div className="polaris-badge">
                         <Sparkles className="w-4 h-4 text-cyan-400" />
-                        <span>Interactive Module</span>
+                        <span>Star Game</span>
                         <Sparkles className="w-4 h-4 text-cyan-400" />
                     </div>
-                    <h1 className="polaris-title">
-                        Constellation Explorer
-                    </h1>
-                    <p className="polaris-subtitle">
-                        Discover the ancient patterns written in starlight. Swipe through the
-                        cosmos and test your knowledge.
-                    </p>
+                    <h1 className="polaris-title">Polaris</h1>
+                    {!quizMode && (
+                        <p className="polaris-subtitle">
+                            Explore the ancient constellations. Swipe through the cosmos.
+                        </p>
+                    )}
                 </motion.div>
 
-                {/* ── Score panel (quiz mode) ── */}
+                {/* ── Level & Score panel (quiz mode) ── */}
                 <AnimatePresence>
-                    {quizMode && (
+                    {quizMode && !showLevelUp && !showBadge && (
                         <motion.div
                             initial={{ opacity: 0, y: -10, scale: 0.95 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -224,10 +258,22 @@ export default function ConstellationGame() {
                             className="polaris-score-panel"
                         >
                             <div className="polaris-score-item">
+                                <Star className="w-4 h-4" style={{ color: levelConfig.color }} />
+                                <span className="polaris-score-label">Lv.{level}</span>
+                                <span
+                                    className="polaris-difficulty-badge"
+                                    style={{ background: levelConfig.color + "22", color: levelConfig.color, borderColor: levelConfig.color + "44" }}
+                                >
+                                    {levelConfig.label}
+                                    {levelConfig.difficulty === "hard" && <Keyboard className="w-3 h-3" />}
+                                </span>
+                            </div>
+                            <div className="polaris-score-divider" />
+                            <div className="polaris-score-item">
                                 <Trophy className="w-4 h-4" style={{ color: '#fbbf24' }} />
                                 <span className="polaris-score-label">Score</span>
                                 <span className={cn("polaris-score-value", showScorePop && "score-pop")}>
-                                    {score}
+                                    {totalScore}
                                 </span>
                             </div>
                             <div className="polaris-score-divider" />
@@ -235,9 +281,34 @@ export default function ConstellationGame() {
                                 <Zap className="w-4 h-4" style={{ color: '#fbbf24' }} />
                                 <span className="polaris-score-label">Streak</span>
                                 <span className="polaris-score-value">
-                                    {streak}
+                                    {streakInLevel}/{CORRECT_TO_PASS}
                                 </span>
                             </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* ── Timer bar ── */}
+                <AnimatePresence>
+                    {quizMode && !showLevelUp && !showBadge && !answered && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="polaris-timer-bar-container"
+                        >
+                            <Clock className="w-3.5 h-3.5" style={{ color: timerColor }} />
+                            <div className="polaris-timer-track">
+                                <motion.div
+                                    className="polaris-timer-fill"
+                                    style={{ background: timerColor }}
+                                    animate={{ width: `${timerFraction * 100}%` }}
+                                    transition={{ duration: 0.3 }}
+                                />
+                            </div>
+                            <span className="polaris-timer-text" style={{ color: timerColor }}>
+                                {timeLeft}s
+                            </span>
                         </motion.div>
                     )}
                 </AnimatePresence>
@@ -245,18 +316,19 @@ export default function ConstellationGame() {
                 {/* ── Card Stack ── */}
                 <div className="polaris-cards-area">
                     <CardStack
-                        items={cards}
-                        activeIndex={activeIndex}
+                        items={quizMode ? quizCards.current : exploreCards}
+                        activeIndex={quizMode ? quizIndex % quizCards.current.length : activeIndex}
                         onActiveChange={(i) => {
                             if (!quizMode) setActiveIndex(i);
                         }}
                         autoAdvanceMs={quizMode ? 999999 : 2500}
+                        cardBackImage={cardBackImg}
                     />
                 </div>
 
-                {/* ── Quiz options ── */}
+                {/* ── Quiz options (Easy/Medium) ── */}
                 <AnimatePresence>
-                    {quizMode && (
+                    {quizMode && levelConfig.difficulty !== "hard" && !showLevelUp && !showBadge && (
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -269,23 +341,23 @@ export default function ConstellationGame() {
                             <div className="polaris-quiz-grid">
                                 {options.map((opt) => {
                                     const isCorrect = opt === activeCard.title;
-                                    const isSelected = answered !== null;
+                                    const isAnswered = answered !== null;
                                     return (
                                         <motion.button
                                             key={opt}
-                                            whileHover={!isSelected ? { scale: 1.03 } : {}}
-                                            whileTap={!isSelected ? { scale: 0.97 } : {}}
+                                            whileHover={!isAnswered ? { scale: 1.03 } : {}}
+                                            whileTap={!isAnswered ? { scale: 0.97 } : {}}
                                             onClick={() => handleGuess(opt)}
                                             className={cn(
                                                 "polaris-quiz-btn",
-                                                isSelected && isCorrect && "polaris-quiz-correct",
-                                                isSelected && !isCorrect && "polaris-quiz-wrong",
-                                                !isSelected && "polaris-quiz-default"
+                                                isAnswered && isCorrect && "polaris-quiz-correct",
+                                                isAnswered && !isCorrect && "polaris-quiz-wrong",
+                                                !isAnswered && "polaris-quiz-default"
                                             )}
                                         >
                                             <Star
                                                 className="w-4 h-4"
-                                                style={{ color: isSelected && isCorrect ? '#4ade80' : '#4a5eae' }}
+                                                style={{ color: isAnswered && isCorrect ? '#4ade80' : '#4a5eae' }}
                                             />
                                             {opt}
                                         </motion.button>
@@ -296,43 +368,163 @@ export default function ConstellationGame() {
                     )}
                 </AnimatePresence>
 
-                {/* ── Controls ── */}
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.5 }}
-                    className="polaris-controls"
-                >
-                    {!quizMode ? (
-                        <button onClick={() => setQuizMode(true)} className="polaris-action-btn">
-                            <Sparkles className="w-4 h-4" />
-                            Guess the Constellation
-                            <ChevronRight className="w-4 h-4" />
-                        </button>
-                    ) : (
-                        <button
-                            onClick={() => {
-                                setQuizMode(false);
-                                setScore(0);
-                                setStreak(0);
-                                setAnswered(null);
-                            }}
-                            className="polaris-action-btn polaris-exit-btn"
+                {/* ── Hard mode: type-in ── */}
+                <AnimatePresence>
+                    {quizMode && levelConfig.difficulty === "hard" && !showLevelUp && !showBadge && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 20 }}
+                            className="polaris-quiz-options"
                         >
-                            <RotateCcw className="w-4 h-4" />
-                            Exit Quiz
-                        </button>
+                            <p className="polaris-quiz-question">
+                                Type the constellation name:
+                            </p>
+                            {answered ? (
+                                <div className={cn(
+                                    "polaris-hard-result",
+                                    answered === "correct" ? "polaris-hard-correct" : "polaris-hard-wrong"
+                                )}>
+                                    {answered === "correct"
+                                        ? "✓ Correct!"
+                                        : `✗ It was "${activeCard.title}"`}
+                                </div>
+                            ) : (
+                                <form onSubmit={handleHardSubmit} className="polaris-hard-form">
+                                    <input
+                                        ref={inputRef}
+                                        type="text"
+                                        value={typedAnswer}
+                                        onChange={(e) => setTypedAnswer(e.target.value)}
+                                        placeholder="Enter constellation name..."
+                                        className="polaris-hard-input"
+                                        autoComplete="off"
+                                        spellCheck={false}
+                                    />
+                                    <button type="submit" className="polaris-action-btn polaris-submit-btn">
+                                        <ArrowRight className="w-4 h-4" />
+                                        Submit
+                                    </button>
+                                </form>
+                            )}
+                        </motion.div>
                     )}
-                </motion.div>
+                </AnimatePresence>
+
+                {/* ── Controls ── */}
+                {!showLevelUp && !showBadge && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.5 }}
+                        className="polaris-controls"
+                    >
+                        {!quizMode ? (
+                            <button onClick={startQuiz} className="polaris-action-btn">
+                                <Sparkles className="w-4 h-4" />
+                                Start Challenge
+                                <ChevronRight className="w-4 h-4" />
+                            </button>
+                        ) : (
+                            <button onClick={handleRestart} className="polaris-action-btn polaris-exit-btn">
+                                <RotateCcw className="w-4 h-4" />
+                                Exit Quiz
+                            </button>
+                        )}
+                    </motion.div>
+                )}
 
                 {/* ── Footer stats ── */}
                 <div className="polaris-footer-stats">
                     <div className="polaris-footer-dot" />
-                    <span>{activeIndex + 1} / {cards.length}</span>
-                    <span className="polaris-footer-sep">•</span>
-                    <span>Swipe or click to explore</span>
+                    {quizMode ? (
+                        <>
+                            <span>Level {level} / {TOTAL_LEVELS}</span>
+                            <span className="polaris-footer-sep">•</span>
+                            <span>Pool: {pool.length} constellations</span>
+                        </>
+                    ) : (
+                        <>
+                            <span>{activeIndex + 1} / {exploreCards.length}</span>
+                            <span className="polaris-footer-sep">•</span>
+                            <span>Swipe or click to explore</span>
+                        </>
+                    )}
                 </div>
             </section>
+
+            {/* ── Level Up Overlay ── */}
+            <AnimatePresence>
+                {showLevelUp && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="polaris-overlay"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.7, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.7, opacity: 0 }}
+                            transition={{ type: "spring", stiffness: 200, damping: 20 }}
+                            className="polaris-level-up-card"
+                        >
+                            <div className="polaris-level-up-stars">✦ ✦ ✦</div>
+                            <h2 className="polaris-level-up-title">Level {level} Complete!</h2>
+                            <p className="polaris-level-up-sub">
+                                {level < TOTAL_LEVELS
+                                    ? `Get ready for Level ${level + 1} — ${getLevelConfig(level + 1).label} difficulty`
+                                    : "Final level awaits!"}
+                            </p>
+                            <div className="polaris-level-up-info">
+                                <span>Pool expands to {Math.min((level + 1) * 10, 88)} constellations</span>
+                            </div>
+                            <button onClick={handleLevelUp} className="polaris-action-btn polaris-level-btn">
+                                <ArrowRight className="w-4 h-4" />
+                                Next Level
+                            </button>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* ── Badge / Completion Overlay ── */}
+            <AnimatePresence>
+                {showBadge && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="polaris-overlay"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.5, opacity: 0, rotateY: 180 }}
+                            animate={{ scale: 1, opacity: 1, rotateY: 0 }}
+                            exit={{ scale: 0.5, opacity: 0 }}
+                            transition={{ type: "spring", stiffness: 150, damping: 18 }}
+                            className="polaris-badge-card"
+                        >
+                            <div className="polaris-badge-trophy">
+                                <Award className="w-16 h-16" style={{ color: '#fbbf24' }} />
+                            </div>
+                            <h2 className="polaris-badge-title">🌟 Constellation Master 🌟</h2>
+                            <p className="polaris-badge-sub">
+                                You identified all 88 constellations across {TOTAL_LEVELS} levels!
+                            </p>
+                            <div className="polaris-badge-stats">
+                                <div className="polaris-badge-stat">
+                                    <Trophy className="w-5 h-5" style={{ color: '#fbbf24' }} />
+                                    <span>Total Score: {totalScore}</span>
+                                </div>
+                            </div>
+                            <button onClick={handleRestart} className="polaris-action-btn polaris-level-btn">
+                                <RotateCcw className="w-4 h-4" />
+                                Play Again
+                            </button>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

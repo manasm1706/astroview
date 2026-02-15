@@ -22,6 +22,7 @@ export interface CardStackProps {
     onActiveChange: (index: number) => void;
     autoAdvanceMs?: number;
     className?: string;
+    cardBackImage?: string;
 }
 
 /* ────────────────────────────── layout math helpers ──── */
@@ -80,6 +81,7 @@ export function CardStack({
     onActiveChange,
     autoAdvanceMs = 2500,
     className,
+    cardBackImage,
 }: CardStackProps) {
     const [isPaused, setIsPaused] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
@@ -185,37 +187,48 @@ export function CardStack({
                         >
                             {/* Card image */}
                             <div className="absolute inset-0">
-                                <img
-                                    src={item.image}
-                                    alt={item.title}
-                                    className="w-full h-full object-cover"
-                                    loading="lazy"
-                                    draggable={false}
-                                />
+                                {style.isActive || !cardBackImage ? (
+                                    <img
+                                        src={item.image}
+                                        alt={item.title}
+                                        className="w-full h-full object-cover"
+                                        loading="lazy"
+                                        draggable={false}
+                                    />
+                                ) : (
+                                    <img
+                                        src={cardBackImage}
+                                        alt="Card back"
+                                        className="w-full h-full object-cover"
+                                        draggable={false}
+                                    />
+                                )}
                                 {/* Gradient overlay */}
                                 <div className="absolute inset-0 bg-gradient-to-t from-cosmic-900/95 via-cosmic-900/40 to-transparent" />
                             </div>
 
                             {/* Card content */}
                             <div className="relative h-full flex flex-col justify-end p-5">
-                                <h3
-                                    className={cn(
-                                        "font-bold tracking-wide mb-1",
-                                        isMobile ? "text-base" : "text-lg",
-                                        style.isActive ? "text-cyan-300 text-glow" : "text-gray-300"
-                                    )}
-                                >
-                                    {item.title}
-                                </h3>
                                 {style.isActive && (
-                                    <motion.p
-                                        initial={{ opacity: 0, y: 8 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: 0.15 }}
-                                        className="text-sm text-gray-400 leading-relaxed line-clamp-3"
-                                    >
-                                        {item.description}
-                                    </motion.p>
+                                    <>
+                                        <h3
+                                            className={cn(
+                                                "font-bold tracking-wide mb-1",
+                                                isMobile ? "text-base" : "text-lg",
+                                                "text-cyan-300 text-glow"
+                                            )}
+                                        >
+                                            {item.title}
+                                        </h3>
+                                        <motion.p
+                                            initial={{ opacity: 0, y: 8 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: 0.15 }}
+                                            className="text-sm text-gray-400 leading-relaxed line-clamp-3"
+                                        >
+                                            {item.description}
+                                        </motion.p>
+                                    </>
                                 )}
                             </div>
                         </motion.div>
