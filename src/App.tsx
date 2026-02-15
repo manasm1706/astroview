@@ -9,6 +9,7 @@ import SpaceImpact from './pages/SpaceImpact'
 import LiveTracker from './pages/LiveTracker'
 import ConstellationGame from './pages/ConstellationGame'
 import Profile from './pages/Profile'
+import TimelinePage from './pages/TimelinePage'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -35,6 +36,7 @@ function App() {
         <Route path="/live-tracker" element={<LiveTracker />} />
         <Route path="/constellation-game" element={<ConstellationGame />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/timeline" element={<TimelinePage />} />
       </Route>
     </Routes>
   )
